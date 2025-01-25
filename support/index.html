@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试用例</title>
+</head>
+
+<body>
+    <div id="content"></div>
+    <script type="module">
+        import { getHtml } from '../dist/index.js';
+        console.log(getHtml)
+        document.getElementById("content").innerHTML = getHtml();
+    </script>
+</body>
+
+</html>
