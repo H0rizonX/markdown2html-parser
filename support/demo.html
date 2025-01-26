@@ -1,0 +1,115 @@
+</!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta charset="utf-8">
+    <script src="https://cdn.staticfile.org/jquery/3.6.1/jquery.min.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei UI, Microsoft YaHei, Arial, sans-serif;
+        }
+
+        #app {
+            width: 810px;
+            height: 400px;
+            margin: 30px auto 0;
+            padding: 20px 20px;
+            background: #00965e;
+        }
+
+        #app .md-editor {
+            width: 400px;
+            height: 400px;
+            float: left;
+        }
+
+        #app .md-content {
+            width: 100%;
+            height: 400px;
+            outline: none;
+            resize: none;
+            padding: 10px 10px;
+            font-size: 17px;
+            border: none;
+            background: #eee;
+        }
+
+        #app .md-html {
+            width: 400px;
+            height: 400px;
+            float: right;
+            background: #eee;
+        }
+
+        #app code {
+            color: #666;
+            padding: 2px 5px;
+            background: #fff;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h3 style="text-align: center;margin-top: 100px;">JavaScript实现一个简单的MarkDown语法解析器</h3>
+    <div id="app">
+
+        <div class="md-editor">
+            <form>
+                <textarea name="md-content" class="md-content" placeholder="在这里使用markdown语法编写"></textarea>
+            </form>
+        </div>
+        <div class="md-html">这里会实时显示markdown语法的解析结果</div>
+    </div>
+
+    <script type="text/javascript">
+
+        // 解析markdown语法为html
+        function markdownToHTML(markdownContent) {
+
+            // 处理标题
+            markdownContent = markdownContent.replace(/^#\s(.*)$/gm, '<h1>$1</h1>');
+            markdownContent = markdownContent.replace(/^##\s(.*)$/gm, '<h2>$1</h2>');
+            markdownContent = markdownContent.replace(/^###\s(.*)$/gm, '<h3>$1</h3>');
+            markdownContent = markdownContent.replace(/^####\s(.*)$/gm, '<h4>$1</h4>');
+            markdownContent = markdownContent.replace(/^#####\s(.*)$/gm, '<h5>$1</h5>');
+            markdownContent = markdownContent.replace(/^######\s(.*)$/gm, '<h6>$1</h6>');
+
+            // 处理加粗、斜体、删除线
+            markdownContent = markdownContent.replace(/\*\*(.*)\*\*/gm, '<strong>$1</strong>');
+            markdownContent = markdownContent.replace(/__(.*)__/gm, '<strong>$1</strong>');
+            markdownContent = markdownContent.replace(/\*(.*)\*/gm, '<em>$1</em>');
+            markdownContent = markdownContent.replace(/_(.*)_/gm, '<em>$1</em>');
+            markdownContent = markdownContent.replace(/~~(.*)~~/gm, '<del>$1</del>');
+
+            // 处理链接和图片
+            markdownContent = markdownContent.replace(/\[(.*?)\]\((.*?)\)/gm, '<a href="$2" rel="external nofollow" >$1</a>');
+            markdownContent = markdownContent.replace(/!\[(.*?)\]\((.*?)\)/gm, '<img src="$2" alt="$1">');
+
+            // 处理行内代码和代码块
+            markdownContent = markdownContent.replace(/`(.*?)`/gm, '<code>$1</code>');
+            markdownContent = markdownContent.replace(/```([\s\S]*?)```/gm, '<pre>$1</pre>');
+
+            // 处理换行
+            markdownContent = markdownContent.replace(/\n/g, "<br>");
+
+            return markdownContent;
+        }
+
+        // 实时解析markdown语法
+        $("#app .md-editor .md-content").bind("input propertychange", function (event) {
+
+            let md_content = $('#app .md-editor .md-content').val();
+            $('#app .md-html').html(markdownToHTML(md_content));
+        });
+
+
+    </script>
+</body>
+
+</html>

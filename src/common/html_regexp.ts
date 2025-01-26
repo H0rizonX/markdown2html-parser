@@ -1,11 +1,20 @@
-export const headerRegex = /^(#{1,6})\s*(.*?)$/; // 匹配标题
-export const boldRegex = /(\*\*|__)(.*?)\1/; // 匹配粗体文本（**bold** 或 __bold__）
-export const italicRegex = /(\*|_)(.*?)\1/; // 匹配斜体文本（*italic* 或 _italic_）
-export const boldItalicRegex = /(\*\*\*|___)(.*?)\1/; // 匹配混合格式（***bold and italic***）
-export const unorderedListItemRegex = /^(\*|\+|\-)\s+(.*)$/; // 匹配无序列表项（- item 或 * item）
-export const orderedListItemRegex = /^(\d+)\.\s+(.*)$/; // 匹配有序列表项（1. item）
-export const imageRegex = /!\[[^\]]*\]\(([^)]+)\)/; // 匹配图片（![alt](url)）
-export const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/; // 匹配链接（[text](url)）
-export const codeBlockRegex = /```([\s\S]+?)```/; // 匹配代码块（```code block```）
-export const blockquoteRegex = /^>\s+(.*)$/; // 匹配块引用（> quote）
-export const horizontalRuleRegex = /^([\-*\_]){3,}$/; // 匹配水平线（--- 或 ***）
+export const h1Regex = /^#\s(.*)$/gm;
+export const h2Regex = /^##\s(.*)$/gm;
+export const h3Regex = /^###\s(.*)$/gm;
+export const h4Regex = /^####\s(.*)$/gm;
+export const h5Regex = /^#####\s(.*)$/gm;
+export const h6Regex = /^######\s(.*)$/gm;
+
+export const boldRegex = /\*\*(.*)\*\*/gm;
+export const boldAltRegex = /__(.*)__/gm;
+export const italicRegex = /\*(.*)\*/gm;
+export const italicAltRegex = /_(.*)_/gm;
+export const strikethroughRegex = /~~(.*)~~/gm;
+
+export const linkRegex = /\[(.*?)\]\((.*?)\)/gm;
+export const imageRegex = /!\[(.*?)\]\((.*?)\)/gm;
+
+export const inlineCodeRegex = /`(.*?)`/gm;
+export const codeBlockRegex = /```([\s\S]*?)```/gm;
+
+export const lineBreakRegex = /\n/g;

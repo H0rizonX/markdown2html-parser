@@ -1,165 +1,83 @@
+import { h1Regex, h2Regex, h3Regex, h4Regex, h5Regex, h6Regex, boldRegex, italicRegex, linkRegex, imageRegex, inlineCodeRegex, } from "./common/html_regexp.js"; // 导入正则表达式
 function lexer(input) {
     const tokens = [];
     let current = 0;
     while (current < input.length) {
-        let char = input[current];
-        if (char === "\n") {
+        const remainingInput = input.slice(current);
+        // 处理换行符
+        if (remainingInput.startsWith("\n")) {
             tokens.push({ type: "newline" });
             current++;
             continue;
         }
         // 处理标题
-        if (char === "#") {
-            let level = 0;
-            while (input[current] === "#") {
-                level++;
-                current++;
-            }
-            if (input[current] === " ") {
-                current++;
-            }
-            let content = "";
-            while (current < input.length && input[current] !== "\n") {
-                content += input[current];
-                current++;
-            }
+        const headerMatch = remainingInput.match(h1Regex) ||
+            remainingInput.match(h2Regex) ||
+            remainingInput.match(h3Regex) ||
+            remainingInput.match(h4Regex) ||
+            remainingInput.match(h5Regex) ||
+            remainingInput.match(h6Regex);
+        if (headerMatch) {
+            const level = headerMatch[0].indexOf(headerMatch[1]);
+            const content = headerMatch[1]?.trim() || "";
             tokens.push({ type: "header", level, content });
+            current += headerMatch[0].length;
             continue;
         }
-        // 处理混合格式 **_ 或 _**
-        if (input.slice(current, current + 3) === "**_") {
-            current += 3;
-            let content = "";
-            while (current < input.length &&
-                input.slice(current, current + 3) !== "_**") {
-                content += input[current];
-                current++;
-            }
-            current += 3;
-            tokens.push({ type: "bold", content: `**${content}**` });
-            tokens.push({ type: "italic", content });
+        // 处理加粗文本
+        const boldMatch = remainingInput.match(boldRegex);
+        if (boldMatch) {
+            tokens.push({ type: "bold", content: boldMatch[1] });
+            current += boldMatch[0].length;
             continue;
         }
-        // 处理粗体 **text**
-        if (input.slice(current, current + 2) === "**") {
-            current += 2;
-            let content = "";
-            while (current < input.length &&
-                input.slice(current, current + 2) !== "**") {
-                content += input[current];
-                current++;
-            }
-            current += 2;
-            tokens.push({ type: "bold", content });
+        // 处理斜体文本
+        const italicMatch = remainingInput.match(italicRegex);
+        if (italicMatch) {
+            tokens.push({ type: "italic", content: italicMatch[1] });
+            current += italicMatch[0].length;
             continue;
         }
-        // 处理斜体 *text*
-        if (input[current] === "*") {
-            current++;
-            let content = "";
-            while (current < input.length && input[current] !== "*") {
-                content += input[current];
-                current++;
-            }
-            current++;
-            tokens.push({ type: "italic", content });
+        // 处理列表项
+        const listItemMatch = remainingInput.match(/^([*+-])\s+(.*)$/);
+        if (listItemMatch) {
+            tokens.push({ type: "list_item", content: listItemMatch[2].trim() });
+            current += listItemMatch[0].length;
             continue;
         }
-        // 处理列表项 - item
-        if (input[current] === "-") {
-            current++;
-            while (input[current] === " ") {
-                current++;
-            }
-            let content = "";
-            while (current < input.length && input[current] !== "\n") {
-                content += input[current];
-                current++;
-            }
-            tokens.push({ type: "list_item", content });
+        // 处理行内代码
+        const inlineCodeMatch = remainingInput.match(inlineCodeRegex);
+        if (inlineCodeMatch) {
+            tokens.push({ type: "code", content: inlineCodeMatch[1] });
+            current += inlineCodeMatch[0].length;
             continue;
         }
-        // 处理代码块（行内代码）
-        if (input[current] === "`") {
-            current++;
-            let content = "";
-            while (current < input.length && input[current] !== "`") {
-                content += input[current];
-                current++;
-            }
-            current++;
-            tokens.push({ type: "code", content });
+        // 处理链接
+        const linkMatch = remainingInput.match(linkRegex);
+        if (linkMatch) {
+            tokens.push({ type: "link", href: linkMatch[2], text: linkMatch[1] });
+            current += linkMatch[0].length;
             continue;
         }
-        // 处理链接 [text](url)
-        if (input[current] === "[" && input[current + 1] !== "]") {
-            current++;
-            let text = "";
-            while (current < input.length && input[current] !== "]") {
-                text += input[current];
-                current++;
-            }
-            if (input[current] === "]") {
-                current++;
-                if (input[current] === "(") {
-                    current++;
-                    let href = "";
-                    while (current < input.length && input[current] !== ")") {
-                        href += input[current];
-                        current++;
-                    }
-                    if (input[current] === ")") {
-                        current++;
-                        tokens.push({ type: "link", href, text });
-                    }
-                }
-            }
+        // 处理图片
+        const imageMatch = remainingInput.match(imageRegex);
+        if (imageMatch) {
+            tokens.push({ type: "image", src: imageMatch[2], alt: imageMatch[1] });
+            current += imageMatch[0].length;
             continue;
         }
-        // 处理图片 ![alt](url)
-        if (input[current] === "!" && input[current + 1] === "[") {
-            current += 2;
-            let alt = "";
-            while (current < input.length && input[current] !== "]") {
-                alt += input[current];
-                current++;
-            }
-            if (input[current] === "]") {
-                current++;
-                if (input[current] === "(") {
-                    current++;
-                    let src = "";
-                    while (current < input.length && input[current] !== ")") {
-                        src += input[current];
-                        current++;
-                    }
-                    if (input[current] === ")") {
-                        current++;
-                        tokens.push({ type: "image", src, alt });
-                    }
-                }
-            }
+        // 处理块引用
+        const blockquoteMatch = remainingInput.match(/^>\s+(.*)$/);
+        if (blockquoteMatch) {
+            tokens.push({ type: "blockquote", content: blockquoteMatch[1].trim() });
+            current += blockquoteMatch[0].length;
             continue;
         }
-        // 处理块引用 > text
-        if (input[current] === ">") {
-            current++;
-            while (input[current] === " ") {
-                current++;
-            }
-            let content = "";
-            while (current < input.length && input[current] !== "\n") {
-                content += input[current];
-                current++;
-            }
-            tokens.push({ type: "blockquote", content });
-            continue;
-        }
-        // 处理水平线 --- 或 ***
-        if (input.slice(current, current + 3) === "---" ||
-            input.slice(current, current + 3) === "***") {
-            current += 3;
+        // 处理水平线
+        const horizontalRuleMatch = remainingInput.match(/^([-*_]){3,}\s*$/);
+        if (horizontalRuleMatch) {
             tokens.push({ type: "horizontal_rule" });
+            current += horizontalRuleMatch[0].length;
             continue;
         }
         // 普通文本
@@ -169,8 +87,8 @@ function lexer(input) {
             text += input[current];
             current++;
         }
-        if (text) {
-            tokens.push({ type: "text", value: text });
+        if (text.trim()) {
+            tokens.push({ type: "text", value: text.trim() });
         }
     }
     return tokens;
