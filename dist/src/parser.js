@@ -84,6 +84,21 @@ function parser(tokens) {
                     });
                     current++;
                     break;
+                case "order_list":
+                    children.push({
+                        type: "order_list",
+                        content: token.value,
+                        start: token.start,
+                    });
+                    current++;
+                    break;
+                case "unorder_list":
+                    children.push({
+                        type: "unorder_list",
+                        content: token.value,
+                    });
+                    current++;
+                    break;
                 default:
                     current++;
                     break;

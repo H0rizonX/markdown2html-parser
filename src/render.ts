@@ -1,4 +1,5 @@
 // render.ts
+import { start } from "repl";
 import { ASTNode } from "./parser";
 
 // 渲染输出
@@ -46,6 +47,11 @@ function render(ast: ASTNode): string {
       // 确保处理换行符
       return `<br>`;
 
+    case "order_list":
+      return `<ol start = ${ast.start ?? "1"}><li>${ast.content}</li></ol>`;
+
+    case "unorder_list":
+      return `<ul><li>${ast.content}</li></ul>`;
     case "complex":
       return renderComplex(ast.content, ast.children);
     default:

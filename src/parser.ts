@@ -14,7 +14,9 @@ type ASTNode =
   | { type: "horizontal_rule" }
   | { type: "text"; value: string }
   | { type: "complex"; content: string; children: String[] } // 修改 complex 类型
-  | { type: "newline" };
+  | { type: "newline" }
+  | { type: "order_list"; content: String; start: number }
+  | { type: "unorder_list"; content: String };
 
 function parser(tokens: Token[]): ASTNode {
   let current = 0;
@@ -117,6 +119,21 @@ function parser(tokens: Token[]): ASTNode {
           current++;
           break;
 
+        case "order_list":
+          children.push({
+            type: "order_list",
+            content: token.value,
+            start: token.start,
+          });
+          current++;
+          break;
+        case "unorder_list":
+          children.push({
+            type: "unorder_list",
+            content: token.value,
+          });
+          current++;
+          break;
         default:
           current++;
           break;

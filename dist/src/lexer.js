@@ -1,12 +1,12 @@
-import { h1Regex, h2Regex, h3Regex, h4Regex, h5Regex, h6Regex, boldRegex, boldAltRegex, italicRegex, italicAltRegex, strikethroughRegex, linkRegex, imageRegex, inlineCodeRegex, codeBlockRegex, lineBreakRegex, } from "./common/html_regexp.js"; // 导入正则表达式
+import { h1Regex, h2Regex, h3Regex, h4Regex, h5Regex, h6Regex, boldRegex, boldAltRegex, italicRegex, italicAltRegex, strikethroughRegex, linkRegex, imageRegex, inlineCodeRegex, codeBlockRegex, lineBreakRegex, orderedListItemRegex, unorderedListItemRegex, unorderedListItemAltRegex, unorderedListItemAlt2Regex, } from "./common/html_regexp.js"; // 导入正则表达式
 function lexer(input) {
     const tokens = [];
+    console.log(input);
     const lines = input.split("\n"); // 按行分割输入文本
     lines.forEach((line) => {
-        // console.log(`行${i++}\t` + line);
         const token = TypeCheck(line);
-        console.log("词法解析器返回的数据");
         // 打印整个 token 数组的 JSON 字符串（已格式化）
+        console.log("打印返回的数组");
         console.log(JSON.stringify(token, null, 2));
         // 遍历 token 数组，获取每个 token 的键值对
         const tokenType = token["type"];
@@ -18,9 +18,11 @@ function lexer(input) {
         const tokenSrc = token["src"] ?? "";
         const tokenAlt = token["alt"] ?? "";
         const tokenChildren = token["children"] ?? [];
+        const tokenStart = token["start"] ?? 1;
         // 处理不同类型的 Token
         switch (tokenType) {
             case "text":
+                console.log(token["value"]);
                 tokens.push({
                     type: "text",
                     value: tokenValue,
@@ -52,7 +54,6 @@ function lexer(input) {
                 });
                 break;
             case "link":
-                console.log("返回了一个链接");
                 tokens.push({
                     type: "link",
                     href: tokenHref,
@@ -60,7 +61,6 @@ function lexer(input) {
                 });
                 break;
             case "image":
-                console.log("返回了一个图片");
                 tokens.push({
                     type: "image",
                     src: tokenSrc,
@@ -76,17 +76,6 @@ function lexer(input) {
             case "code_block":
                 tokens.push({
                     type: "code_block",
-                    content: tokenContent,
-                });
-                break;
-            case "newline":
-                tokens.push({
-                    type: "newline",
-                });
-                break;
-            case "list_item":
-                tokens.push({
-                    type: "list_item",
                     content: tokenContent,
                 });
                 break;
@@ -108,10 +97,24 @@ function lexer(input) {
                     content: tokenContent,
                 });
                 break;
+            case "order_list":
+                tokens.push({
+                    type: "order_list",
+                    value: tokenValue,
+                    start: tokenStart,
+                });
+                break;
+            case "unorder_list":
+                tokens.push({
+                    type: "unorder_list",
+                    value: tokenValue,
+                });
+                break;
             default:
                 console.warn(`未知的 Token 类型: ${tokenType}`);
                 break;
         }
+        tokens.push({ type: "newline" });
     });
     return tokens;
 }
@@ -124,23 +127,26 @@ function TypeCheck(input) {
     for (let i = 0; i < headerReg.length; i++) {
         const header = input.match(headerReg[i]);
         if (header) {
-            // console.log("第" + i + "个正则表达式");
             let temp = i + 1;
             status.push("h" + temp);
             input = replaceInput(headerReg[i], input);
         }
     }
-    // 匹配加粗
-    const bold = input.match(boldRegex) || input.match(boldAltRegex);
+    // 处理加粗
+    const boldRegexes = [boldRegex, boldAltRegex];
+    const matchedBoldRegex = boldRegexes.find((regex) => input.match(regex));
+    const bold = matchedBoldRegex ? input.match(matchedBoldRegex) : null;
     if (bold) {
         status.push("bold");
-        input = replaceInput(boldRegex || boldAltRegex, input);
+        input = replaceInput(matchedBoldRegex, input); // 确保替换用的是匹配到的正则
     }
-    // 匹配斜体
-    const italic = input.match(italicAltRegex) || input.match(italicRegex);
+    // 处理斜体
+    const italicRegexes = [italicRegex, italicAltRegex];
+    const matchedItalicRegex = italicRegexes.find((regex) => input.match(regex));
+    const italic = matchedItalicRegex ? input.match(matchedItalicRegex) : null;
     if (italic) {
         status.push("italic");
-        input = replaceInput(italicRegex || italicAltRegex, input);
+        input = replaceInput(matchedItalicRegex, input);
     }
     // 匹配删除线
     const strikethrough = input.match(strikethroughRegex);
@@ -152,17 +158,13 @@ function TypeCheck(input) {
     const image = input.match(imageRegex);
     if (image) {
         status.push("image");
-        console.log("匹配到了图片");
         input = imgAndLinkReplace(imageRegex, input);
-        console.log(input);
     }
     // 匹配链接
     const link = input.match(linkRegex);
     if (link) {
-        console.log("匹配到链接");
         status.push("link");
         input = imgAndLinkReplace(linkRegex, input);
-        console.log(input);
     }
     // 行内代码匹配
     const code = input.match(inlineCodeRegex);
@@ -181,22 +183,39 @@ function TypeCheck(input) {
     if (lineBreak) {
         status.push("newLine");
     }
-    // console.log(`得到的最终input为:\t${input}\n`);
-    // console.log(`得到的语法格式:\t${status}\n`);
+    // 有序列表匹配
+    const orderLine = input.match(orderedListItemRegex);
+    let start = 1;
+    if (orderLine) {
+        status.push("order_list");
+        // console.log("匹配到了列表项");
+        let getStart = input.split(". "); //将数据分开
+        input = replaceInput(orderedListItemRegex, input);
+        start = +getStart[0];
+    }
+    const unorderedListRegexes = [
+        unorderedListItemRegex,
+        unorderedListItemAltRegex,
+        unorderedListItemAlt2Regex,
+    ];
+    const matchedRegex = unorderedListRegexes.find((regex) => input.match(regex)); // 找到第一个成功匹配的正则
+    const unorder = matchedRegex ? input.match(matchedRegex) : null;
+    if (unorder) {
+        status.push("unorder_list");
+        input = replaceInput(matchedRegex, input); // 确保用匹配到的正则替换
+        console.log("匹配到无序列表");
+        console.log(input);
+    }
     content += input;
-    // console.log(`最终返回的内容为:\t${content}`);
-    // token封装
+    // 封装token
     if (status.length > 1) {
         for (let s of status) {
             if (s === "image") {
                 let ans = typeImgOrUrl(content);
-                console.log("匹配到图片后的文本为:\r" + JSON.stringify(ans, null, 2));
                 token.type = "complex";
                 token.src = ans.url;
                 token.alt = ans.desc;
                 token.children = [...status];
-                // console.log("打印token\n");
-                // console.log(token);
             }
             else if (s === "link") {
                 let ans = typeImgOrUrl(content);
@@ -216,7 +235,6 @@ function TypeCheck(input) {
         const style = status[0];
         let headerLevel = typeHeader(style);
         if (headerLevel) {
-            // console.log("匹配到标题了");
             let str = style.split("");
             token.type = "header";
             token.level = +str[str.length - 1];
@@ -225,8 +243,6 @@ function TypeCheck(input) {
         else {
             // 不是标题则是其他简单样式
             let ans = typeImgOrUrl(content);
-            console.log("匹配到返回的样式为：");
-            console.log(style);
             switch (style) {
                 case "bold":
                     token.type = "bold";
@@ -241,16 +257,25 @@ function TypeCheck(input) {
                     token.content = content;
                     break;
                 case "image":
-                    console.log("style是图片");
+                    // console.log("style是图片");
                     token.type = "image";
                     token.src = ans.url;
                     token.alt = ans.desc;
                     break;
                 case "link":
-                    console.log("style是链接" + style);
+                    // console.log("style是链接" + style);
                     token.type = "link";
                     token.text = ans.desc;
                     token.href = ans.url;
+                    break;
+                case "order_list":
+                    token.type = "order_list";
+                    token.value = content;
+                    token.start = start;
+                    break;
+                case "unorder_list":
+                    token.type = "unorder_list";
+                    token.value = content;
                     break;
                 default:
                     break;
@@ -259,7 +284,8 @@ function TypeCheck(input) {
     }
     else {
         token.type = "text";
-        token.content = content;
+        token.value = content;
+        console.log(token);
     }
     return token;
 }
@@ -288,7 +314,6 @@ function typeImgOrUrl(input) {
     let str = input.split(" ");
     ans.desc = str[0];
     ans.url = str[1];
-    // console.log("打印判断是否正确:\n" + JSON.stringify(ans, null, 2));
     return ans;
 }
 export { lexer };

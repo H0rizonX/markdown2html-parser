@@ -30,6 +30,10 @@ function render(ast) {
         case "newline":
             // 确保处理换行符
             return `<br>`;
+        case "order_list":
+            return `<ol start = ${ast.start ?? "1"}><li>${ast.content}</li></ol>`;
+        case "unorder_list":
+            return `<ul><li>${ast.content}</li></ul>`;
         case "complex":
             return renderComplex(ast.content, ast.children);
         default:

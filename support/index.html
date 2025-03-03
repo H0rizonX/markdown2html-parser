@@ -73,7 +73,7 @@
     </div>
 
     <script type="module">
-        import { markdownToHtml } from '../dist/src/md2html.js' // 确保路径正确
+        import { markdownToHtml } from '../dist/src/md2html.js'
 
         const textarea = document.getElementById('markdown-input');
         const button = document.getElementById('submit-btn');
@@ -83,8 +83,7 @@
             const inputText = textarea.value.trim(); // 获取输入的 Markdown 内容
             if (inputText) {
                 const renderedHtml = markdownToHtml(inputText); // 调用转换函数
-                console.log("最终渲染结果")
-                console.log(renderedHtml)
+
                 output.innerHTML = renderedHtml; // 显示渲染结果
             } else {
                 output.innerHTML = '<p style="color: red;">请输入有效的 Markdown 内容！</p>';
