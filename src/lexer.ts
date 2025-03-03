@@ -48,6 +48,13 @@ type Token = {
   alt?: string; // 适用于 image
   children?: String[]; // **允许所有 Token 存储子 Token**
   start?: number; //有序列表开始的顺序，默认为1
+  listArr?: Array<{
+    value: string;
+    type: "order_list" | "unorder_list";
+    start: number;
+    isFirst: number;
+  }>;
+  isFirst?: number; //判断是否为第一项
 };
 
 function lexer(input: string): Token[] {
@@ -58,8 +65,8 @@ function lexer(input: string): Token[] {
     const token = TypeCheck(line);
 
     // 打印整个 token 数组的 JSON 字符串（已格式化）
-    console.log("打印返回的数组");
-    console.log(JSON.stringify(token, null, 2));
+    // console.log("打印返回的数组");
+    // console.log(JSON.stringify(token, null, 2));
 
     // 遍历 token 数组，获取每个 token 的键值对
     const tokenType = token["type"] as string;
@@ -169,6 +176,7 @@ function lexer(input: string): Token[] {
           value: tokenValue,
           start: tokenStart,
         });
+
         break;
       case "unorder_list":
         tokens.push({
@@ -180,7 +188,9 @@ function lexer(input: string): Token[] {
         console.warn(`未知的 Token 类型: ${tokenType}`);
         break;
     }
-    tokens.push({ type: "newline" });
+    if (tokenType !== "order_list" && tokenType !== "unorder_list") {
+      tokens.push({ type: "newline" });
+    }
   });
 
   return tokens;

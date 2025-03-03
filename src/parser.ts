@@ -15,7 +15,12 @@ type ASTNode =
   | { type: "text"; value: string }
   | { type: "complex"; content: string; children: String[] } // 修改 complex 类型
   | { type: "newline" }
-  | { type: "order_list"; content: String; start: number }
+  | {
+      type: "order_list";
+      content: String;
+      start: number;
+      nestedItems?: ASTNode[];
+    }
   | { type: "unorder_list"; content: String };
 
 function parser(tokens: Token[]): ASTNode {
@@ -124,9 +129,17 @@ function parser(tokens: Token[]): ASTNode {
             type: "order_list",
             content: token.value,
             start: token.start,
+            nestedItems: token.listArr
+              ? token.listArr.map((item) => ({
+                  type: "order_list",
+                  content: item.value,
+                  start: item.start,
+                }))
+              : [], // 如果 `listArr` 存在，则递归解析子项，否则为空数组
           });
           current++;
           break;
+
         case "unorder_list":
           children.push({
             type: "unorder_list",

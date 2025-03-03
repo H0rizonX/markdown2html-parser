@@ -77,18 +77,49 @@ npm install markdown2html-parser
 
 本项目遵循 ISC 许可证。
 
-# 2025/3/3 0.0.2 版本
+# 2025/3/3 0.0.2 版本更新日志
 
 ## 更新改动
 
-### 优化导入
+### 优化导入方式
 
-新增 require 导入
+新增了两种导入方式的支持：
 
-`````
-const markdown2html = require("./src/md2html.js")
-import {markdown2html} from './src/md2html.js'
-````typescript
-`````
+### 使用 ESM 导入：
 
-### 新增列表解析
+```javascript
+import {
+  convertMarkdownToHtml,
+  lexMarkdown,
+  parseMarkdown,
+} from "markdown2html-parser";
+```
+
+### 使用 CommonJS 导入：
+
+```javascript
+const {
+  convertMarkdownToHtml,
+  lexMarkdown,
+  parseMarkdown,
+} = require("markdown2html-parser");
+```
+
+### 使用默认导入：
+
+```javascript
+import convertMarkdownToHtml from "markdown2html-parser";
+```
+
+** 如果只需要解析 markdown 代码,则只需要导入 convertMarkdownToHtml 即可 **
+
+```javascript
+const htmlCode = convertMarkdownToHtml(coding);
+```
+
+### 新增列表解析功能
+
+在本次版本中，新增了对列表解析的支持。用户可以通过以下方式输入列表内容：
+
+- 支持 `1.`, `2.`, `3.` 等有序列表形式；
+- 支持 `*`, `+`, `-` 等无序列表形式，三种方式均可解析。

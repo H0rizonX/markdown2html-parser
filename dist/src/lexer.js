@@ -6,8 +6,8 @@ function lexer(input) {
     lines.forEach((line) => {
         const token = TypeCheck(line);
         // 打印整个 token 数组的 JSON 字符串（已格式化）
-        console.log("打印返回的数组");
-        console.log(JSON.stringify(token, null, 2));
+        // console.log("打印返回的数组");
+        // console.log(JSON.stringify(token, null, 2));
         // 遍历 token 数组，获取每个 token 的键值对
         const tokenType = token["type"];
         const tokenContent = token["content"] ?? "";
@@ -114,7 +114,9 @@ function lexer(input) {
                 console.warn(`未知的 Token 类型: ${tokenType}`);
                 break;
         }
-        tokens.push({ type: "newline" });
+        if (tokenType !== "order_list" && tokenType !== "unorder_list") {
+            tokens.push({ type: "newline" });
+        }
     });
     return tokens;
 }

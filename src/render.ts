@@ -59,6 +59,16 @@ function render(ast: ASTNode): string {
   }
 }
 
+function renderOrderList(ast: ASTNode): string {
+  if (ast.type === "order_list") {
+    const items = ast.nestedItems
+      .map((item) => `<li>${render(item)}</li>`)
+      .join("");
+    return `<ol start="${ast.start}">${items}</ol>`;
+  }
+  return "";
+}
+
 function renderComplex(content: string, children: String[]): string {
   if (children.length === 0) {
     return content;

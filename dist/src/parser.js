@@ -89,6 +89,13 @@ function parser(tokens) {
                         type: "order_list",
                         content: token.value,
                         start: token.start,
+                        nestedItems: token.listArr
+                            ? token.listArr.map((item) => ({
+                                type: "order_list",
+                                content: item.value,
+                                start: item.start,
+                            }))
+                            : [], // 如果 `listArr` 存在，则递归解析子项，否则为空数组
                     });
                     current++;
                     break;

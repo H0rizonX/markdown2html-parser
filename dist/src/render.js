@@ -40,6 +40,15 @@ function render(ast) {
             return "";
     }
 }
+function renderOrderList(ast) {
+    if (ast.type === "order_list") {
+        const items = ast.nestedItems
+            .map((item) => `<li>${render(item)}</li>`)
+            .join("");
+        return `<ol start="${ast.start}">${items}</ol>`;
+    }
+    return "";
+}
 function renderComplex(content, children) {
     if (children.length === 0) {
         return content;
