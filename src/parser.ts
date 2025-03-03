@@ -5,14 +5,16 @@ type ASTNode =
   | { type: "header"; level: number; content: string }
   | { type: "bold"; content: string }
   | { type: "italic"; content: string }
-  | { type: "text"; value: string }
-  | { type: "list"; items: ASTNode[] }
-  | { type: "list_item"; content: ASTNode[] }
+  | { type: "strikethrough"; content: string }
   | { type: "link"; href: string; text: string }
   | { type: "image"; src: string; alt: string }
+  | { type: "code"; content: string }
+  | { type: "code_block"; content: string }
   | { type: "blockquote"; children: ASTNode[] }
   | { type: "horizontal_rule" }
-  | { type: "code"; content: string };
+  | { type: "text"; value: string }
+  | { type: "complex"; content: string; children: String[] } // 修改 complex 类型
+  | { type: "newline" };
 
 function parser(tokens: Token[]): ASTNode {
   let current = 0;
@@ -25,111 +27,104 @@ function parser(tokens: Token[]): ASTNode {
 
       switch (token.type) {
         case "text":
-          children.push({ type: "text", value: token.value });
+          // 处理 text 类型
+          children.push({ type: "text", value: token.value! });
           current++;
           break;
 
         case "header":
+          // 处理 header 类型
           children.push({
             type: "header",
-            level: token.level,
-            content: token.content,
+            level: token.level!,
+            content: token.content!,
           });
           current++;
           break;
 
         case "bold":
-          children.push({ type: "bold", content: token.content });
+          // 处理 bold 类型
+          children.push({ type: "bold", content: token.content! });
           current++;
           break;
 
         case "italic":
-          children.push({ type: "italic", content: token.content });
+          // 处理 italic 类型
+          children.push({ type: "italic", content: token.content! });
           current++;
           break;
 
-        case "list_item":
-          children.push(parseList());
+        case "strikethrough":
+          // 处理 strikethrough 类型
+          children.push({ type: "strikethrough", content: token.content! });
+          current++;
           break;
 
         case "link":
+          // 处理 link 类型
           children.push({
             type: "link",
-            href: token.href,
-            text: token.text,
+            href: token.href!,
+            text: token.text!,
           });
           current++;
           break;
 
         case "image":
+          // 处理 image 类型
           children.push({
             type: "image",
-            src: token.src,
-            alt: token.alt,
+            src: token.src!,
+            alt: token.alt!,
           });
           current++;
           break;
 
-        case "blockquote":
-          children.push(parseBlockquote());
-          break;
-
-        case "horizontal_rule":
-          children.push({ type: "horizontal_rule" });
+        case "code":
+          // 处理 inline code 类型
+          children.push({ type: "code", content: token.content! });
           current++;
           break;
 
-        case "code":
-          children.push({ type: "code", content: token.content });
+        case "code_block":
+          // 处理 code block 类型
+          children.push({ type: "code_block", content: token.content! });
+          current++;
+          break;
+
+        case "blockquote":
+          // 处理 blockquote 类型
+          children.push({
+            type: "blockquote",
+            children: [{ type: "text", value: token.content! }],
+          });
           current++;
           break;
 
         case "newline":
-          current++; // 跳过换行符
+          // 处理 newline 类型
+          children.push({ type: "newline" });
+          current++;
+          break;
+
+        case "complex":
+          // 处理 complex 类型，多个样式组合
+          children.push({
+            type: "complex",
+            content: token.content!,
+            children: token.children!, // 保存组合的样式信息
+          });
+          current++;
           break;
 
         default:
-          current++; // 跳过未知 token
+          current++;
           break;
       }
     }
 
+    // 返回包含所有内容的文档节点
     return { type: "document", children };
-  }
-
-  // 解析列表（支持嵌套）
-  function parseList(): ASTNode {
-    const items: ASTNode[] = [];
-
-    while (current < tokens.length && tokens[current].type === "list_item") {
-      const token = tokens[current];
-      current++; // 跳过 list_item
-
-      const content: ASTNode[] = [];
-      while (
-        current < tokens.length &&
-        tokens[current].type !== "list_item" &&
-        tokens[current].type !== "newline"
-      ) {
-        content.push(parse());
-      }
-
-      items.push({ type: "list_item", content });
-    }
-
-    return { type: "list", items };
-  }
-
-  // 解析区块引用（支持嵌套）
-  function parseBlockquote(): ASTNode {
-    const children: ASTNode[] = [];
-    current++; // 跳过 blockquote token
-
-    while (current < tokens.length && tokens[current].type === "blockquote") {
-      children.push(parse());
-    }
-
-    return { type: "blockquote", children };
   }
 
   return parse();

@@ -6,10 +6,12 @@ function parser(tokens) {
             const token = tokens[current];
             switch (token.type) {
                 case "text":
+                    // 处理 text 类型
                     children.push({ type: "text", value: token.value });
                     current++;
                     break;
                 case "header":
+                    // 处理 header 类型
                     children.push({
                         type: "header",
                         level: token.level,
@@ -18,17 +20,22 @@ function parser(tokens) {
                     current++;
                     break;
                 case "bold":
+                    // 处理 bold 类型
                     children.push({ type: "bold", content: token.content });
                     current++;
                     break;
                 case "italic":
+                    // 处理 italic 类型
                     children.push({ type: "italic", content: token.content });
                     current++;
                     break;
-                case "list_item":
-                    children.push(parseList());
+                case "strikethrough":
+                    // 处理 strikethrough 类型
+                    children.push({ type: "strikethrough", content: token.content });
+                    current++;
                     break;
                 case "link":
+                    // 处理 link 类型
                     children.push({
                         type: "link",
                         href: token.href,
@@ -37,6 +44,7 @@ function parser(tokens) {
                     current++;
                     break;
                 case "image":
+                    // 处理 image 类型
                     children.push({
                         type: "image",
                         src: token.src,
@@ -44,51 +52,45 @@ function parser(tokens) {
                     });
                     current++;
                     break;
-                case "blockquote":
-                    children.push(parseBlockquote());
-                    break;
-                case "horizontal_rule":
-                    children.push({ type: "horizontal_rule" });
-                    current++;
-                    break;
                 case "code":
+                    // 处理 inline code 类型
                     children.push({ type: "code", content: token.content });
                     current++;
                     break;
+                case "code_block":
+                    // 处理 code block 类型
+                    children.push({ type: "code_block", content: token.content });
+                    current++;
+                    break;
+                case "blockquote":
+                    // 处理 blockquote 类型
+                    children.push({
+                        type: "blockquote",
+                        children: [{ type: "text", value: token.content }],
+                    });
+                    current++;
+                    break;
                 case "newline":
-                    current++; // 跳过换行符
+                    // 处理 newline 类型
+                    children.push({ type: "newline" });
+                    current++;
+                    break;
+                case "complex":
+                    // 处理 complex 类型，多个样式组合
+                    children.push({
+                        type: "complex",
+                        content: token.content,
+                        children: token.children, // 保存组合的样式信息
+                    });
+                    current++;
                     break;
                 default:
-                    current++; // 跳过未知 token
+                    current++;
                     break;
             }
         }
+        // 返回包含所有内容的文档节点
         return { type: "document", children };
-    }
-    // 解析列表（支持嵌套）
-    function parseList() {
-        const items = [];
-        while (current < tokens.length && tokens[current].type === "list_item") {
-            const token = tokens[current];
-            current++; // 跳过 list_item
-            const content = [];
-            while (current < tokens.length &&
-                tokens[current].type !== "list_item" &&
-                tokens[current].type !== "newline") {
-                content.push(parse());
-            }
-            items.push({ type: "list_item", content });
-        }
-        return { type: "list", items };
-    }
-    // 解析区块引用（支持嵌套）
-    function parseBlockquote() {
-        const children = [];
-        current++; // 跳过 blockquote token
-        while (current < tokens.length && tokens[current].type === "blockquote") {
-            children.push(parse());
-        }
-        return { type: "blockquote", children };
     }
     return parse();
 }
