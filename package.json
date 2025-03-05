@@ -1,10 +1,16 @@
 {
   "name": "markdown2html-parser",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "将markdown转义为html",
   "main": "/dist/index.js",
   "keywords": [
     "markdown-html-parser"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "files": [
+    "dist"
   ],
   "author": "Horizon",
   "license": "ISC",

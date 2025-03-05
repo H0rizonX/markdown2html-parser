@@ -28,23 +28,6 @@
             border-radius: 4px;
         }
 
-        button {
-            display: block;
-            width: 200px;
-            height: 40px;
-            margin: 0 auto;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
         #output {
             margin-top: 30px;
             padding: 20px;
@@ -63,9 +46,6 @@
         <!-- 输入框 -->
         <textarea id="markdown-input" placeholder="请输入Markdown语法..."></textarea>
 
-        <!-- 确认按钮 -->
-        <button id="submit-btn">渲染 Markdown</button>
-
         <!-- 展示渲染结果 -->
         <div id="output">
             <p>渲染结果将显示在这里...</p>
@@ -76,19 +56,21 @@
         import { markdownToHtml } from '../dist/src/md2html.js'
 
         const textarea = document.getElementById('markdown-input');
-        const button = document.getElementById('submit-btn');
         const output = document.getElementById('output');
 
-        button.addEventListener('click', () => {
+        // 实时渲染函数
+        const renderMarkdown = () => {
             const inputText = textarea.value.trim(); // 获取输入的 Markdown 内容
             if (inputText) {
                 const renderedHtml = markdownToHtml(inputText); // 调用转换函数
-
                 output.innerHTML = renderedHtml; // 显示渲染结果
             } else {
                 output.innerHTML = '<p style="color: red;">请输入有效的 Markdown 内容！</p>';
             }
-        });
+        };
+
+        // 监听 input 事件，实时渲染
+        textarea.addEventListener('input', renderMarkdown);
     </script>
 </body>
 
