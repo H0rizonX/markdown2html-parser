@@ -63,6 +63,7 @@
             const inputText = textarea.value.trim(); // 获取输入的 Markdown 内容
             if (inputText) {
                 const renderedHtml = markdownToHtml(inputText); // 调用转换函数
+                console.log(renderedHtml)
                 output.innerHTML = renderedHtml; // 显示渲染结果
             } else {
                 output.innerHTML = '<p style="color: red;">请输入有效的 Markdown 内容！</p>';

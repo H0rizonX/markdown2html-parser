@@ -59,15 +59,18 @@ type Token = {
 
 function lexer(input: string): Token[] {
   const tokens: Token[] = [];
+  console.log("原生代码");
   console.log(input);
   const lines = input.split("\n"); // 按行分割输入文本
-  lines.forEach((line) => {
-    const token = TypeCheck(line);
 
+  lines.forEach((line, index) => {
+    const token = TypeCheck(line);
     // 打印整个 token 数组的 JSON 字符串（已格式化）
     // console.log("打印返回的数组");
-    // console.log(JSON.stringify(token, null, 2));
+    console.log(JSON.stringify(token, null, 2));
 
+    // console.log("输出数组位置");
+    // console.log(index);
     // 遍历 token 数组，获取每个 token 的键值对
     const tokenType = token["type"] as string;
     const tokenContent = (token["content"] as string) ?? "";
@@ -80,6 +83,9 @@ function lexer(input: string): Token[] {
     const tokenChildren = (token["children"] as string[]) ?? [];
     const tokenStart = (token["start"] as number) ?? 1;
 
+    if (index !== 0) {
+      tokens.push({ type: "newline" });
+    }
     // 处理不同类型的 Token
     switch (tokenType) {
       case "text":
@@ -169,7 +175,11 @@ function lexer(input: string): Token[] {
           content: tokenContent,
         });
         break;
-
+      case "newline":
+        tokens.push({
+          type: "newline",
+        });
+        break;
       case "order_list":
         tokens.push({
           type: "order_list",
@@ -188,11 +198,7 @@ function lexer(input: string): Token[] {
         console.warn(`未知的 Token 类型: ${tokenType}`);
         break;
     }
-    if (tokenType !== "order_list" && tokenType !== "unorder_list") {
-      tokens.push({ type: "newline" });
-    }
   });
-
   return tokens;
 }
 
@@ -270,7 +276,8 @@ function TypeCheck(input: string): Object {
   // 换行符匹配
   const lineBreak = input.match(lineBreakRegex);
   if (lineBreak) {
-    status.push("newLine");
+    console.log("匹配到换行符");
+    status.push("newline");
   }
 
   // 有序列表匹配
